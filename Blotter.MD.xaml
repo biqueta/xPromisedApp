@@ -1,0 +1,254 @@
+<Window x:Class="xp.Net.Blotter.WPF.MD.Blotter"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:xp.Net.Blotter.WPF.MD"
+        mc:Ignorable="d"
+        Title="Trading Widget" Height="500" Width="300">
+    <Window.Resources>
+        <!-- Recursos para cores e estilos -->
+        <SolidColorBrush x:Key="DarkBackground" Color="#FF1E1E1E"/>
+        <SolidColorBrush x:Key="LightBlueText" Color="#FF58A6FF"/>
+        <SolidColorBrush x:Key="OrangeHighlight" Color="#FFFFA500"/>
+        <SolidColorBrush x:Key="LightOrangeText" Color="#FFFFA500"/>
+        <Style x:Key="GridRowStyle" TargetType="{x:Type DataGridRow}">
+            <!-- Estilo para as linhas do grid -->
+        </Style>
+        <!-- Outros estilos e templates -->
+        <!-- Continuação dos Recursos para cores e estilos -->
+        <Style TargetType="Button" x:Key="LadderButtonStyle">
+            <Setter Property="Background" Value="{StaticResource DarkBackground}"/>
+            <Setter Property="Foreground" Value="{StaticResource LightOrangeText}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LightBlueText}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="1"/>
+            <!-- Outros Setters conforme necessário -->
+        </Style>
+        <Style TargetType="TextBlock" x:Key="DataGridHeaderStyle">
+            <Setter Property="Foreground" Value="{StaticResource LightOrangeText}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="3"/>
+            <!-- Outros Setters conforme necessário -->
+        </Style>
+        <!-- Estilos adicionais -->
+    </Window.Resources>
+    <Grid Background="{StaticResource DarkBackground}">
+        <!-- Grid principal para organizar o layout -->
+        <!-- Painel de instrumentos -->
+        <StackPanel Orientation="Vertical">
+            <!-- Botões de lotes -->
+            <StackPanel Orientation="Horizontal">
+                <Button Content="1" Background="{StaticResource OrangeHighlight}"/>
+                <Button Content="5" Background="{StaticResource OrangeHighlight}"/>
+                <!-- Outros botões -->
+            </StackPanel>
+            <!-- Listagem/Grid de instrumentos -->
+            <DataGrid AutoGenerateColumns="False" RowStyle="{StaticResource GridRowStyle}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Instrumento" Binding="{Binding Name}" Foreground="{StaticResource LightBlueText}"/>
+                    <!-- Outras colunas -->
+                </DataGrid.Columns>
+            </DataGrid>
+            <!-- Cabeçalho com Net Change, High/Low, e Volume -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                <TextBlock Text="Net Change" Foreground="{StaticResource LightBlueText}" Margin="5"/>
+                <!-- Outros elementos do cabeçalho -->
+            </StackPanel>
+            <!-- Área principal do livro de ofertas e painel de instrumentos -->
+            <Grid  Grid.Row="1" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="3*" />
+                </Grid.ColumnDefinitions>
+                <!-- Painel lateral com botões de lotes e lista de instrumentos -->
+                <StackPanel Grid.Column="0" Orientation="Vertical">
+                    <!-- Botões de lotes e lista de instrumentos definidos anteriormente -->
+                </StackPanel>
+                <!-- DataGrid atualizado com colunas para a price ladder -->
+                <DataGrid Grid.Column="1" AutoGenerateColumns="False" RowStyle="{StaticResource GridRowStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Bid Size" Binding="{Binding BidSize}" Foreground="{StaticResource LightBlueText}"/>
+                        <!--<DataGridTextColumn Header="Price" Binding="{Binding Price}" Foreground="{StaticResource LightBlueText}"/>-->
+                        <DataGridTemplateColumn Header="Price">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding Price}" Style="{StaticResource LadderButtonStyle}" 
+                                            Command="{Binding Path=PriceClickCommand}" CommandParameter="{Binding Price}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Ask Size" Binding="{Binding AskSize}" Foreground="{StaticResource LightBlueText}"/>
+                        <!-- Outras colunas como Last Trade, etc. -->
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Grid Grid.Row="1">
+                    <!-- Seletor de Instrumentos -->
+                    <ComboBox x:Name="instrumentSelector" Grid.Column="0" Margin="10"
+                  DisplayMemberPath="Name"
+                  SelectedValuePath="Code"
+                  ItemsSource="{Binding AvailableInstruments}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" Foreground="{StaticResource LightBlueText}"/>
+                                    <!-- Elementos adicionais podem ser inseridos aqui -->
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <!-- Detalhes do Instrumento Selecionado -->
+                    <TextBlock x:Name="selectedInstrumentDetails" Grid.Column="1" Margin="10"
+                   Foreground="{StaticResource LightOrangeText}"
+                   Text="{Binding SelectedInstrument.Description}"/>
+                </Grid>
+                <Grid Grid.Row="2">
+                    <!-- Tabela de Ordens -->
+                    <DataGrid x:Name="ordersDataGrid" Margin="10" AutoGenerateColumns="False" 
+                  ItemsSource="{Binding Orders}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Price" Binding="{Binding Price}" 
+                                    Foreground="{StaticResource LightBlueText}"/>
+                            <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" 
+                                    Foreground="{StaticResource LightOrangeText}"/>
+                            <!-- Mais colunas podem ser adicionadas conforme necessário -->
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+                <Grid Grid.Row="3">
+                     <!--Gráfico Simples--> 
+                    <Charting:Chart x:Name="priceChart" Margin="10">
+                        <Charting:LineSeries Title="Price" 
+                                 IndependentValueBinding="{Binding Time}" 
+                                 DependentValueBinding="{Binding Value}"
+                                 ItemsSource="{Binding PriceData}"
+                                 IsSelectionEnabled="True"/>
+                    </Charting:Chart>
+                </Grid>
+                 <!--Adicionando um StatusBar para feedback e ações--> 
+                <StatusBar Grid.Row="4" Background="{StaticResource DarkBackground}" Foreground="White">
+                    <StatusBarItem Content="Ready" HorizontalAlignment="Left"/>
+                    <StatusBarItem Content="Connect" HorizontalAlignment="Right">
+                        <Button Content="Connect" Command="{Binding ConnectCommand}" />
+                    </StatusBarItem>
+                </StatusBar>
+                <!-- Adicionando funcionalidades de interação -->
+                <Grid Grid.Row="5">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+                        <Button Content="Buy" Command="{Binding BuyCommand}" 
+                    Background="{StaticResource LightBlueBackground}" 
+                    Foreground="White" Margin="5"/>
+                        <Button Content="Sell" Command="{Binding SellCommand}" 
+                    Background="{StaticResource LightOrangeBackground}" 
+                    Foreground="White" Margin="5"/>
+                    </StackPanel>
+                </Grid>
+                <!-- Refinamento dos Popups com animações e melhor UX -->
+                <Popup IsOpen="{Binding IsBuyPopupOpen}" Placement="Center" AllowsTransparency="True">
+                    <Border Background="{StaticResource DarkBackground}" Padding="10" CornerRadius="5">
+                        <StackPanel>
+                            <TextBlock Text="Enter Buy Quantity" Foreground="{StaticResource LightBlueBackground}" FontWeight="Bold"/>
+                            <TextBox x:Name="buyQuantityTextBox" Background="DarkGray" Foreground="White" BorderBrush="{StaticResource LightBlueBackground}" Margin="0,5"/>
+                            <Button Content="Confirm Buy" Command="{Binding ConfirmBuyCommand}" 
+                        Background="{StaticResource LightBlueBackground}" 
+                        Foreground="White" Margin="0,10"/>
+                        </StackPanel>
+                    </Border>
+                </Popup>
+                <!-- Semelhante ao Popup de compra, um para venda também deve ser implementado -->
+                <!-- Adicionando tooltips para melhor informar o usuário -->
+                <Button Content="Buy" Command="{Binding BuyCommand}" 
+            Background="{StaticResource LightBlueBackground}" 
+            Foreground="White" Margin="5" ToolTip="Initiate a buy order"/>
+                <Button Content="Sell" Command="{Binding SellCommand}" 
+            Background="{StaticResource LightOrangeBackground}" 
+            Foreground="White" Margin="5" ToolTip="Initiate a sell order"/>
+                <!-- Considerações finais -->
+                <!-- Outros controles e funcionalidades podem ser incluídos, como histórico de transações, alertas de preços, e integração com outras APIs ou serviços -->
+                <!-- A parte de estilização, interatividade e animações deve ser cuidadosamente elaborada para proporcionar uma experiência de usuário suave e intuitiva -->
+                <!-- Layout Grid adicional -->
+                <Grid.ColumnDefinitions>
+                    <!--...-->
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="200"/>
+                    <!-- Coluna para os botões dos clientes favoritos -->
+                </Grid.ColumnDefinitions>
+                <!-- Lista de botões dos clientes favoritos -->
+                <StackPanel Grid.Column="3" Background="{StaticResource DarkBackground}">
+                    <TextBlock Text="Favoritos" Foreground="{StaticResource LightBlueBackground}" FontWeight="Bold" Padding="10"/>
+                    <ItemsControl ItemsSource="{Binding FavoriteClients}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding ClientName}" Command="{Binding SelectClientCommand}"
+                            Margin="5" Background="{StaticResource LightOrangeBackground}" Foreground="White"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <!-- Caixa para corretagem padrão do cliente -->
+                <StackPanel Grid.Column="3" Background="{StaticResource DarkBackground}" Orientation="Horizontal" Padding="10" VerticalAlignment="Bottom">
+                    <TextBlock Text="Corretagem:" Foreground="{StaticResource LightBlueBackground}" FontWeight="Bold"/>
+                    <TextBox x:Name="brokerageTextBox" Text="{Binding SelectedClient.DefaultBrokerage, Mode=TwoWay}"
+                 Width="100" Margin="5" Background="DarkGray" Foreground="White"/>
+                </StackPanel>
+                <!-- Código de estilização e funcionalidades adicionais -->
+            </Grid>
+            <Grid>
+                <!-- O restante do seu XAML vem aqui -->
+                <!-- Coluna adicional para os botões dos clientes favoritos -->
+                <StackPanel Grid.Column="2" Orientation="Vertical" Background="{StaticResource DarkBackground}">
+                    <TextBlock Text="Favoritos" Foreground="White" Padding="5" FontSize="16" HorizontalAlignment="Center"/>
+                    <ItemsControl ItemsSource="{Binding FavoriteClients}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Name}" Command="{Binding DataContext.SelectClientCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" CommandParameter="{Binding}"
+                            Margin="2" Padding="5" Background="{StaticResource LightOrangeBackground}" Foreground="White"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <!-- Área para visualizar e editar a corretagem padrão do cliente selecionado -->
+                <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Bottom" Background="{StaticResource DarkBackground}" Padding="10">
+                    <TextBlock Text="Corretagem Padrão" Foreground="White" FontSize="14" HorizontalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedClient.DefaultBrokerage, UpdateSourceTrigger=PropertyChanged}" Background="{StaticResource LightBlueBackground}" Foreground="White" Padding="3" BorderBrush="{StaticResource LightOrangeBackground}" BorderThickness="1"/>
+                </StackPanel>
+            </Grid>
+            <Grid>
+                <!-- Seu XAML anterior aqui -->
+                <!-- Área de filtros para a lista de clientes -->
+                <StackPanel Grid.Column="2" Orientation="Vertical" Background="{StaticResource DarkBackground}" Padding="5">
+                    <TextBox PlaceholderText="Filtrar clientes..." Foreground="White" Background="{StaticResource LightBlueBackground}" Padding="3" Margin="2" BorderBrush="{StaticResource LightOrangeBackground}" BorderThickness="1"/>
+                    <Button Content="Aplicar Filtro" Command="{Binding ApplyFilterCommand}" Background="{StaticResource LightOrangeBackground}" Foreground="White" Padding="5" Margin="2"/>
+                </StackPanel>
+                <!-- Botão de atualização para corretagem padrão e outras ações -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Background="{StaticResource DarkBackground}" Padding="10">
+                    <Button Content="Atualizar Corretagem" Command="{Binding UpdateBrokerageCommand}" Background="{StaticResource LightOrangeBackground}" Foreground="White" Padding="5" Margin="2"/>
+                    <Button Content="Salvar Alterações" Command="{Binding SaveChangesCommand}" Background="{StaticResource LightBlueBackground}" Foreground="White" Padding="5" Margin="2"/>
+                </StackPanel>
+            </Grid>
+            <Grid>
+                <!-- Seu XAML anterior aqui -->
+                <!-- Coluna para botões de clientes favoritos -->
+                <ListView Grid.Column="3" Margin="5" Background="{StaticResource DarkBackground}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding ClientName}"
+                        Command="{Binding SelectClientCommand}"
+                        CommandParameter="{Binding}"
+                        Background="{StaticResource LightOrangeBackground}"
+                        Foreground="White"
+                        Padding="5"
+                        Margin="2"/>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <!-- Caixa de texto para a corretagem padrão -->
+                <StackPanel Grid.Column="3" Orientation="Vertical" VerticalAlignment="Bottom" Background="{StaticResource DarkBackground}" Padding="5">
+                    <TextBlock Text="Corretagem Padrão:" Foreground="White" Margin="2"/>
+                    <TextBox x:Name="BrokerageTextBox" Text="{Binding DefaultBrokerage, Mode=TwoWay}" Foreground="White" Background="{StaticResource LightBlueBackground}" Padding="3" Margin="2" BorderBrush="{StaticResource LightOrangeBackground}" BorderThickness="1"/>
+                    <Button Content="Salvar Corretagem" Command="{Binding SaveBrokerageCommand}" Background="{StaticResource LightOrangeBackground}" Foreground="White" Padding="5" Margin="2"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Grid>
+</Window>
